@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validador de Times</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <style>
+
+    </style>
+  </head>
+  <body>
+    <div class="jumbotron">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">@</span>
+              </div>
+              <input id="filter-input" onkeyup="filter()" type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+            </div>
+            <div id="members-display" style="height: 400px; overflow-y: auto; overflow-x: hidden;">
+              <div class="d-flex justify-content-center">
+                <div class="spinner-border" role="status">
+                  <span class="sr-only">Loading...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm">
+            <h4 id="team-label">Meu time 0/5</h4>
+            <ul id="team-list" class="list-group">
+           
+            </ul>
+          </div>
+        </div>
+        <hr />
+        <div id="alerts-display">
+          <div class="alert alert-warning" role="alert">
+            Seu time não soma 1300 pontos
+          </div>
+          <div class="alert alert-warning" role="alert">
+            Seu time não tem 2 participantes com mais de 650 pontos
+          </div>
+          <div class="alert alert-danger" role="alert">
+            Esse time não será aceito
+          </div>
+        </div>
+      </div>
+      
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.js"></script>
+    <script>
+      let allMembers = [];
+      const teamMembers = [];
+
+      axios.get('https://rank-api.shawee.io/api/v1/rank')
+      .then(({ data }) => {
+        allMembers = data;
+        $('#members-display').html(`
+          <ul id="members-list" class="list-group">
+           
+          </ul>
+        `);
+        data.forEach(({ username, score }) => {
+          $('#members-list').append(`
+            <li id='${username}' class="list-group-item all-members">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span>${username} - ${score}</span>
+                <button type="button" onclick="addMember('${username}')" class="btn btn-outline-dark btn-sm">Adicionar ao time</button>
+              </div>
+            </li>
+          `);
+        });
+      });
+
+      const filter = () => {
+        const term = $('#filter-input').val();
+        const tableValues = $('li.all-members');
+        for(const item of tableValues) {
+          if(term.length > 0) {
+            if(!item.id.includes(term)) item.style.display = "none";
+            else item.style.display = "";
+          } else item.style.display = ""
+        }
+      };
+
+      const addMember = (id) => {
+        if(!teamMembers.find(({ username }) => username === id)) {
+          if(teamMembers.length > 4) {
+            alert('Seu time está cheio');
+          } else teamMembers.push(allMembers.find(({ username }) => username === id));
+        } else alert(`${id} ja está na sua equipe`);
+        renderMembers();
+      }
+
+      const removeMember = (id) => {
+        const item = teamMembers.find(({ username }) => username === id);
+        const index = teamMembers.indexOf(item);
+        teamMembers.splice(index, 1);
+        renderMembers();
+      };
+
+      const renderMembers = () => {
+        $('#team-label').html(`Meu time ${teamMembers.length}/5`)
+        $('#team-list').html('');
+        teamMembers.forEach(({ username, score }) => {
+          $('#team-list').append(`
+            <li id='${username}' class="list-group-item">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span>${username} - ${score}</span>
+                <button type="button" onclick="removeMember('${username}')" class="btn btn-outline-danger btn-sm">Remover do time</button>
+              </div>
+            </li>
+          `);
+        });
+        renderAlerts();
+      };
+
+      const renderAlerts = () => {
+        let teamScore = 0;
+        let membersWith650 = 0;
+        let penalties = 0;
+      
+        teamMembers.forEach(({ score }) => {
+          teamScore += score;
+          if(score >= 650) membersWith650++;
+        });
+        $('#alerts-display').html('');
+        if(teamScore < 1300) {
+          penalties ++;
+          $('#alerts-display').append(`
+            <div class="alert alert-warning" role="alert">
+              Seu time não soma 1300 pontos
+            </div>
+          `)
+        } else {
+          $('#alerts-display').append(`
+            <div class="alert alert-success" role="alert">
+              Seu time soma 1300 pontos ou mais!
+            </div>
+          `)
+        }
+        if(membersWith650 < 2) {
+          penalties ++;
+          $('#alerts-display').append(`
+            <div class="alert alert-warning" role="alert">
+              Seu time não tem 2 participantes com mais de 650 pontos
+            </div>
+          `)
+        } else {
+          $('#alerts-display').append(`
+            <div class="alert alert-success" role="alert">
+              Seu time tem 2 participantes com mais de 650 pontos!
+            </div>
+          `)
+        }
+        if(penalties === 2) {
+          $('#alerts-display').append(`
+            <div class="alert alert-danger" role="alert">
+              Esse time não será aceito
+            </div>
+          `)
+        } else {
+          $('#alerts-display').append(`
+            <div class="alert alert-success" role="alert">
+              Esse time será aceito!
+            </div>
+          `)
+        }
+      };
+    </script>
+  </body>
+</html>
