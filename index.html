@@ -5,31 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Validador de Times</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-    <style>
-
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <div class="jumbotron">
+    <div class="content">
+      <img src="https://srchacks.com/images/logos/shawee2.png" style="width: 100vw; height: auto; position: absolute; z-index: 1; opacity: 0.3;" />
       <div class="container">
         <div class="row">
           <div class="col-sm">
             <div class="input-group mb-3">
               <div class="input-group-prepend">
-                <span class="input-group-text" id="basic-addon1">@</span>
+                <span class="input-group-text">@</span>
               </div>
               <input id="filter-input" onkeyup="filter()" type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
             </div>
             <div id="members-display" style="height: 400px; overflow-y: auto; overflow-x: hidden;">
               <div class="d-flex justify-content-center">
-                <div class="spinner-border" role="status">
-                  <span class="sr-only">Loading...</span>
-                </div>
+                <div class="spinner-border" role="status"></div>
               </div>
             </div>
           </div>
           <div class="col-sm">
-            <h4 id="team-label">Meu time 0/5</h4>
+            <h4 id="team-label">Meu time <span>0/5</span></h4>
             <ul id="team-list" class="list-group">
            
             </ul>
@@ -107,7 +105,7 @@
       };
 
       const renderMembers = () => {
-        $('#team-label').html(`Meu time ${teamMembers.length}/5`)
+        $('#team-label').html(`Meu time <span>${teamMembers.length}/5</span>`)
         $('#team-list').html('');
         teamMembers.forEach(({ username, score }) => {
           $('#team-list').append(`
